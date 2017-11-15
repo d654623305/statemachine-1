@@ -1,10 +1,10 @@
-##测试spring state machine 
+#测试spring state machine #
 
 ### 配置
 ### 状态
 ### 动作
-1：正向流程
-2：逆向流程
+>1：正向流程 
+>2：逆向流程
 ### 守护
 
 ### 监控

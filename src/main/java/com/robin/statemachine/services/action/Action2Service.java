@@ -15,6 +15,5 @@ public class Action2Service implements Action<States,Events> {
         System.out.println("当前方法 ActionService2");
         System.out.println("获得参数" + JSONObject.toJSONString(stateContext.getMessage()) + " Event:" + stateContext.getEvent());
         System.out.println("执行业务逻辑");
-        System.out.println(1/0);
     }
 }
