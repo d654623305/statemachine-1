@@ -11,6 +11,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.StateMachineContext;
 import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.persist.StateMachinePersister;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,11 +22,13 @@ import java.util.UUID;
 public class StatemachineApplication implements CommandLineRunner {
 
     //	@Autowired
-   //	StateMachine<States,Events> stateMachine;
+    //	StateMachine<States,Events> stateMachine;
     @Autowired
     StateMachineFactory<States, Events> stateMachineFactory;
 
+
     @Autowired
+    StateMachinePersister stateMachinePersister;
 
     public static void main(String[] args) {
         SpringApplication.run(StatemachineApplication.class, args);
@@ -47,6 +50,8 @@ public class StatemachineApplication implements CommandLineRunner {
             stateMachine.stop();
         }
         test1();
+
+        test2();
     }
 
     /****
@@ -65,7 +70,7 @@ public class StatemachineApplication implements CommandLineRunner {
          *
          */
 
-        for(int i=0;i<50;i++){
+        for (int i = 0; i < 50; i++) {
             Integer paramKey = new Random().nextInt(10);
 
             Message<Events> message = MessageBuilder.withPayload(result.get(new Random().nextInt(2))).setHeader("key", paramKey).build();
@@ -73,21 +78,54 @@ public class StatemachineApplication implements CommandLineRunner {
             StateMachine stateMachine = null;
             if (stateContext.get("machineParamsKey" + paramKey) != null) {
 
-                stateMachine=stateContext.get("machineParamsKey" + paramKey);
+                stateMachine = stateContext.get("machineParamsKey" + paramKey);
 
 
             } else {
                 stateMachine = stateMachineFactory.getStateMachine();
                 stateMachine.start();
-                stateContext.put("machineParamsKey"+paramKey,stateMachine);
+                stateContext.put("machineParamsKey" + paramKey, stateMachine);
             }
             Boolean result = stateMachine.sendEvent(message);
-            if (result){
-                System.out.println("当前"+stateMachine.getUuid().toString() +"---"+stateMachine.getState().getId() );
+            if (result) {
+                System.out.println("当前" + stateMachine.getUuid().toString() + "---" + stateMachine.getState().getId());
             }
         }
 
         System.out.println("本次测试结束，预期结果 相当一部分日志输出状态states3");
+
+    }
+
+
+    /**
+     * 测试持久化操作
+     *
+     */
+    void test2() {
+
+        for (int i = 0; i < 50; i++) {
+            Integer paramKey = new Random().nextInt(10);
+
+            Message<Events> message = MessageBuilder.withPayload(result.get(new Random().nextInt(2))).setHeader("key", paramKey).build();
+
+            try {
+                StateMachine stateMachine = stateMachinePersister.restore(stateMachineFactory.getStateMachine(), "machineParamsKey" + paramKey);
+
+                Boolean result = stateMachine.sendEvent(message);
+                if (result) {
+                    System.out.println("持久化操作 :当前 key:machineParamsKey" + paramKey + "---" + stateMachine.getState().getId());
+                }
+                stateMachinePersister.persist(stateMachine, "machineParamsKey" + paramKey);
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        System.out.println("本次测试结束，预期结果 相当一部分日志输出状态states3");
+
 
     }
 
